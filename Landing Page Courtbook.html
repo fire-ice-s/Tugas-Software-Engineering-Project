@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CourtBook — Booking Lapangan Badminton</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { inter: ['Inter', 'sans-serif'] },
+                    colors: {
+                        court: { 500: '#3B82F6', 600: '#2563EB', 400: '#60A5FA' },
+                        book: { 500: '#22C55E', 600: '#16A34A', 400: '#4ADE80', 300: '#86EFAC' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #050505; color: #fff; overflow-x: hidden; transition: background-color 0.5s ease, color 0.5s ease; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0A0A0A; }
+        ::-webkit-scrollbar-thumb { background: rgba(34,197,94,0.3); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(34,197,94,0.5); }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #4ADE80, #22C55E, #3B82F6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .glass {
+            background: rgba(255,255,255,0.03);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.3s ease;
+        }
+        .glass-strong {
+            background: rgba(10,10,10,0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #22C55E, #16A34A);
+            box-shadow: 0 0 30px rgba(34,197,94,0.25);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            box-shadow: 0 0 50px rgba(34,197,94,0.45);
+            transform: scale(1.03);
+        }
+        .btn-outline {
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.03);
+            transition: all 0.3s ease;
+        }
+        .btn-outline:hover {
+            border-color: rgba(34,197,94,0.4);
+            background: rgba(34,197,94,0.05);
+            transform: scale(1.03);
+        }
+
+        .feature-card, .step-card, .role-card, .team-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .feature-card:hover { border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.04); transform: translateY(-4px); }
+        .feature-card:hover .feature-icon { transform: scale(1.1); box-shadow: 0 0 25px rgba(34,197,94,0.3); }
+        .step-card:hover { border-color: rgba(34,197,94,0.2); background: rgba(34,197,94,0.03); }
+        .role-card:hover { border-color: rgba(255,255,255,0.12); transform: translateY(-2px); }
+        .team-card:hover { border-color: rgba(34,197,94,0.2); transform: translateY(-6px); }
+        .team-card:hover .team-avatar { box-shadow: 0 0 30px rgba(34,197,94,0.3); }
+        .feature-icon { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+
+        .animate-on-scroll { opacity: 0; transform: translateY(30px); filter: blur(6px); transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+        .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); filter: blur(0); }
+
+        .hero-mockup { animation: float 6s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-16px); } }
+
+        .mock-slot { transition: all 0.3s ease; }
+        .mock-slot.available:hover { background: rgba(34,197,94,0.15); border-color: rgba(34,197,94,0.4); }
+
+        .connector-line { background: linear-gradient(to bottom, rgba(34,197,94,0.4), rgba(34,197,94,0.05)); }
+        .stat-number { font-variant-numeric: tabular-nums; }
+
+        #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .section-bg { position: relative; }
+        .section-bg::before { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 600px; height: 600px; background: radial-gradient(circle, rgba(34,197,94,0.04) 0%, transparent 70%); pointer-events: none; }
+
+        .nav-scrolled { background: rgba(5,5,5,0.9) !important; border-color: rgba(255,255,255,0.08) !important; }
+        .mobile-menu-open { opacity: 1 !important; pointer-events: auto !important; transform: translateY(0) !important; }
+
+        .toast { animation: toast-in 0.4s ease-out forwards; }
+        @keyframes toast-in { from { transform: translateY(20px) scale(0.95); opacity: 0; } to { transform: translateY(0) scale(1); opacity: 1; } }
+        .toast-out { animation: toast-out 0.3s ease-in forwards; }
+        @keyframes toast-out { from { transform: translateY(0) scale(1); opacity: 1; } to { transform: translateY(20px) scale(0.95); opacity: 0; } }
+
+        .noise-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; opacity: 0.03; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+
+        /* ===== LIGHT THEME OVERRIDES ===== */
+        body.light-theme { background: #f8fafc; color: #0f172a; }
+        body.light-theme ::-webkit-scrollbar-track { background: #f1f5f9; }
+        body.light-theme ::-webkit-scrollbar-thumb { background: rgba(34,197,94,0.4); }
+        body.light-theme ::-webkit-scrollbar-thumb:hover { background: rgba(34,197,94,0.6); }
+
+        body.light-theme .glass { background: rgba(255,255,255,0.7); border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 30px rgba(0,0,0,0.02); }
+        body.light-theme .glass-strong { background: rgba(255,255,255,0.85); border: 1px solid rgba(0,0,0,0.08); box-shadow: 0 4px 30px rgba(0,0,0,0.03); }
+
+        body.light-theme .feature-card, body.light-theme .step-card, body.light-theme .role-card, body.light-theme .team-card { background: rgba(255,255,255,0.6); border: 1px solid rgba(0,0,0,0.05); box-shadow: 0 4px 20px rgba(0,0,0,0.02); }
+        body.light-theme .feature-card:hover, body.light-theme .step-card:hover { background: rgba(34,197,94,0.04); border-color: rgba(34,197,94,0.25); box-shadow: 0 10px 30px rgba(34,197,94,0.06); }
+        body.light-theme .role-card:hover { border-color: rgba(0,0,0,0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.04); }
+        body.light-theme .team-card:hover { border-color: rgba(34,197,94,0.25); box-shadow: 0 10px 30px rgba(34,197,94,0.06); }
+
+        body.light-theme .btn-outline { border-color: rgba(0,0,0,0.15); background: rgba(0,0,0,0.02); color: #334155 !important; }
+        body.light-theme .btn-outline:hover { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.05); color: #0f172a !important; }
+
+        body.light-theme .text-neutral-300 { color: #334155 !important; }
+        body.light-theme .text-neutral-400 { color: #475569 !important; }
+        body.light-theme .text-neutral-500 { color: #64748b !important; }
+        body.light-theme .text-neutral-600 { color: #94a3b8 !important; }
+        body.light-theme .hover\:text-white:hover { color: #0f172a !important; }
+
+        body.light-theme .bg-white\/5 { background-color: rgba(0,0,0,0.03) !important; }
+        body.light-theme .bg-white\/10 { background-color: rgba(0,0,0,0.06) !important; }
+        body.light-theme .bg-white\/\[0\.02\] { background-color: rgba(0,0,0,0.02) !important; }
+        body.light-theme .bg-white\/\[0\.015\] { background-color: rgba(0,0,0,0.015) !important; }
+        body.light-theme .hover\:bg-white\/5:hover { background-color: rgba(0,0,0,0.05) !important; }
+
+        body.light-theme .border-white\/5 { border-color: rgba(0,0,0,0.05) !important; }
+        body.light-theme .border-white\/10 { border-color: rgba(0,0,0,0.08) !important; }
+
+        body.light-theme .text-book-400 { color: #16A34A !important; }
+        body.light-theme .text-book-300 { color: #15803D !important; }
+        body.light-theme .text-court-400 { color: #2563EB !important; }
+        body.light-theme .text-court-300 { color: #1D4ED8 !important; }
+        body.light-theme .text-yellow-400 { color: #CA8A04 !important; }
+        body.light-theme .text-red-400 { color: #DC2626 !important; }
+        body.light-theme .text-red-400\/60 { color: rgba(220, 38, 38, 0.7) !important; }
+
+        body.light-theme .gradient-text { background: linear-gradient(135deg, #16A34A, #15803D, #2563EB); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        body.light-theme .mock-slot.available:hover { background: rgba(34,197,94,0.08); border-color: rgba(34,197,94,0.3); }
+        body.light-theme .nav-scrolled { background: rgba(255,255,255,0.9) !important; border-color: rgba(0,0,0,0.08) !important; box-shadow: 0 4px 20px rgba(0,0,0,0.05); }
+        body.light-theme #mobile-menu { background: rgba(248, 250, 252, 0.95); border: 1px solid rgba(0,0,0,0.05); }
+        body.light-theme .noise-bg { opacity: 0.05; filter: invert(1); }
+    </style>
+</head>
+<body class="font-inter">
+
+    <div class="noise-bg"></div>
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 glass-strong rounded-full px-5 py-2.5 flex items-center gap-8 transition-all duration-300 max-w-4xl w-[calc(100%-2rem)]">
+        <a href="#hero" class="flex items-center gap-2.5 flex-shrink-0">
+            <img src="https://z-cdn-media.chatglm.cn/files/73e3e7f9-1a5d-42ab-9c8d-356a7f6d174e.png?auth_key=1876485946-3cd1841e060a489d8115899a606120f4-0-e846344c935a50cd69753a3886bad3b7" alt="CourtBook" class="h-8 w-8 rounded-full object-contain bg-white/10 p-0.5">
+            <span class="text-sm font-semibold tracking-tight">
+                <span class="text-court-400">Court</span><span class="text-book-400">Book</span>
+            </span>
+        </a>
+
+        <div class="hidden md:flex items-center gap-6 ml-auto">
+            <a href="#features" class="text-xs font-normal text-neutral-400 hover:text-white transition-colors duration-300">Fitur</a>
+            <a href="#how-it-works" class="text-xs font-normal text-neutral-400 hover:text-white transition-colors duration-300">Cara Kerja</a>
+            <a href="#roles" class="text-xs font-normal text-neutral-400 hover:text-white transition-colors duration-300">Peran</a>
+            <a href="#team" class="text-xs font-normal text-neutral-400 hover:text-white transition-colors duration-300">Tim</a>
+        </div>
+
+        <div class="hidden md:flex items-center gap-3 ml-auto">
+            <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-white/5 transition-colors flex items-center justify-center" aria-label="Toggle Theme">
+                <span id="theme-icon-desktop" class="text-lg">☀️</span>
+            </button>
+            <button onclick="window.location.href='Login Courtbook.html'" class="btn-primary text-black text-xs font-medium px-4 py-2 rounded-full flex items-center gap-1.5">
+                Mulai Booking
+                <span class="text-xs">➔</span>
+            </button>
+        </div>
+
+        <div class="flex md:hidden items-center gap-2 ml-auto">
+            <button onclick="toggleTheme()" class="p-2 rounded-full hover:bg-white/5 transition-colors flex items-center justify-center">
+                <span id="theme-icon-mobile-nav" class="text-lg">☀️</span>
+            </button>
+            <button id="menu-btn" onclick="toggleMobileMenu()" class="p-2 rounded-full hover:bg-white/5 transition-colors flex items-center justify-center">
+                <span class="text-xl">☰</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 z-40 glass-strong flex flex-col items-center justify-center gap-8 opacity-0 pointer-events-none translate-y-4 transition-all duration-500">
+        <button onclick="toggleMobileMenu()" class="absolute top-8 right-8 p-2 rounded-full hover:bg-white/5">
+            <span class="text-2xl">✕</span>
+        </button>
+        <a href="#features" onclick="toggleMobileMenu()" class="text-2xl font-light text-neutral-300 hover:text-white transition-colors">Fitur</a>
+        <a href="#how-it-works" onclick="toggleMobileMenu()" class="text-2xl font-light text-neutral-300 hover:text-white transition-colors">Cara Kerja</a>
+        <a href="#roles" onclick="toggleMobileMenu()" class="text-2xl font-light text-neutral-300 hover:text-white transition-colors">Peran</a>
+        <a href="#team" onclick="toggleMobileMenu()" class="text-2xl font-light text-neutral-300 hover:text-white transition-colors">Tim</a>
+        <button onclick="window.location.href='Login Courtbook.html'" class="btn-primary text-black text-sm font-medium px-6 py-3 rounded-full mt-4">
+            Mulai Booking
+        </button>
+    </div>
+
+    <!-- Main Content -->
+    <main class="relative z-10">
+
+        <!-- ===== HERO SECTION ===== -->
+        <section id="hero" class="min-h-screen flex flex-col items-center justify-center px-6 pt-28 pb-20 text-center">
+            <div class="max-w-5xl mx-auto">
+                <div class="animate-on-scroll inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-8">
+                    <span class="relative flex h-2 w-2">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-book-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-book-500"></span>
+                    </span>
+                    <span class="text-xs font-light text-neutral-400 tracking-wide">Sistem Booking Lapangan Badminton</span>
+                </div>
+
+                <h1 class="animate-on-scroll text-4xl sm:text-5xl md:text-7xl font-semibold leading-[1.05] tracking-tight mb-6" style="transition-delay: 100ms;">
+                    Booking Lapangan<br>
+                    <span class="gradient-text">Badminton</span> Jadi<br>
+                    Lebih Mudah
+                </h1>
+
+                <p class="animate-on-scroll text-sm sm:text-base font-light text-neutral-400 max-w-xl mx-auto leading-relaxed mb-10" style="transition-delay: 200ms;">
+                    CourtBook membantu kamu memesan lapangan badminton secara online — cepat, praktis, dan tanpa antri. Lihat jadwal, pilih waktu, dan booking dalam hitungan menit.
+                </p>
+
+                <div class="animate-on-scroll flex flex-col sm:flex-row items-center justify-center gap-4 mb-14" style="transition-delay: 300ms;">
+                    <button onclick="window.location.href='Login Courtbook.html'" class="btn-primary text-black text-sm font-medium px-7 py-3 rounded-full flex items-center gap-2">
+                        Mulai Booking
+                        <span class="text-sm">➔</span>
+                    </button>
+                    <a href="#how-it-works" class="btn-outline text-sm font-medium px-7 py-3 rounded-full flex items-center gap-2 text-neutral-300">
+                        <span class="text-sm">▶</span>
+                        Cara Kerja
+                    </a>
+                </div>
+
+                <!-- Hero Mockup -->
+                <div class="animate-on-scroll hero-mockup max-w-md mx-auto" style="transition-delay: 400ms;">
+                    <div class="glass rounded-2xl p-5 text-left">
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <p class="text-[10px] text-neutral-500 uppercase tracking-widest mb-0.5">Jadwal Hari Ini</p>
+                                <p class="text-sm font-medium">Lapangan 1 — Indoor</p>
+                            </div>
+                            <span class="text-[10px] font-medium bg-book-500/15 text-book-400 px-2.5 py-1 rounded-full">Tersedia</span>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <div class="mock-slot available flex items-center justify-between px-3 py-2.5 rounded-xl border border-white/5 bg-white/[0.02] cursor-pointer">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="text-sm text-neutral-500">🕒</span>
+                                    <span class="text-xs text-neutral-300">08:00 — 09:00</span>
+                                </div>
+                                <span class="text-sm text-book-400">✔</span>
+                            </div>
+                            <div class="mock-slot available flex items-center justify-between px-3 py-2.5 rounded-xl border border-white/5 bg-white/[0.02] cursor-pointer">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="text-sm text-neutral-500">🕒</span>
+                                    <span class="text-xs text-neutral-300">09:00 — 10:00</span>
+                                </div>
+                                <span class="text-sm text-book-400">✔</span>
+                            </div>
+                            <div class="flex items-center justify-between px-3 py-2.5 rounded-xl border border-white/5 bg-white/[0.015] opacity-40 cursor-not-allowed">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="text-sm text-neutral-500">🕒</span>
+                                    <span class="text-xs text-neutral-400">10:00 — 11:00</span>
+                                </div>
+                                <span class="text-sm text-red-400/60">✖</span>
+                            </div>
+                            <div class="mock-slot available flex items-center justify-between px-3 py-2.5 rounded-xl border border-book-500/30 bg-book-500/5 cursor-pointer">
+                                <div class="flex items-center gap-2.5">
+                                    <span class="text-sm text-book-400">🕒</span>
+                                    <span class="text-xs text-book-300">11:00 — 12:00</span>
+                                </div>
+                                <span class="text-sm text-book-400">✔</span>
+                            </div>
+                        </div>
+                        <button onclick="window.location.href='Login Courtbook.html'" class="w-full btn-primary text-black text-xs font-medium py-2.5 rounded-xl flex items-center justify-center gap-2">
+                            <span class="text-sm">📅</span>
+                            Booking Slot Ini
+                        </button>
+                    </div>
+                </div>
+
+                <div class="hidden lg:flex animate-on-scroll items-center justify-center gap-12 mt-14" style="transition-delay: 500ms;">
+                    <div class="text-center"><p class="text-2xl font-semibold stat-number text-book-400">6</p><p class="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Fitur Utama</p></div>
+                    <div class="w-px h-8 bg-white/10"></div>
+                    <div class="text-center"><p class="text-2xl font-semibold stat-number text-book-400">0</p><p class="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Bentrok Jadwal</p></div>
+                    <div class="w-px h-8 bg-white/10"></div>
+                    <div class="text-center"><p class="text-2xl font-semibold stat-number">100%</p><p class="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Digital</p></div>
+                </div>
+            </div>
+
+            <div class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 animate-bounce">
+                <span class="text-lg text-neutral-600">⬇</span>
+            </div>
+        </section>
+
+        <!-- ===== STATS SECTION (Mobile visible) ===== -->
+        <section class="lg:hidden border-y border-white/5 py-8 px-6">
+            <div class="max-w-4xl mx-auto grid grid-cols-3 gap-6 text-center">
+                <div><p class="text-xl font-semibold stat-number text-book-400">6</p><p class="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Fitur Utama</p></div>
+                <div class="border-x border-white/5"><p class="text-xl font-semibold stat-number text-book-400">0</p><p class="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Bentrok Jadwal</p></div>
+                <div><p class="text-xl font-semibold stat-number">100%</p><p class="text-[10px] text-neutral-500 uppercase tracking-widest mt-1">Digital</p></div>
+            </div>
+        </section>
+
+        <!-- ===== FEATURES SECTION ===== -->
+        <section id="features" class="section-bg py-24 md:py-32 px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-16">
+                    <div class="animate-on-scroll inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6">
+                        <span class="text-sm">📑</span>
+                        <span class="text-xs font-light text-neutral-400 tracking-wide">Fitur Lengkap</span>
+                    </div>
+                    <h2 class="animate-on-scroll text-3xl md:text-5xl font-semibold tracking-tight mb-4" style="transition-delay: 100ms;">
+                        Semua yang Kamu <span class="gradient-text">Butuhkan</span>
+                    </h2>
+                    <p class="animate-on-scroll text-sm text-neutral-400 font-light max-w-md mx-auto" style="transition-delay: 200ms;">
+                        Fitur-fitur yang dirancang untuk mempermudah proses booking lapangan badminton dari awal hingga akhir.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="animate-on-scroll feature-card rounded-2xl p-7 md:col-span-2 lg:col-span-2" style="transition-delay: 100ms;">
+                        <div class="flex flex-col md:flex-row md:items-start gap-6">
+                            <div class="flex-1">
+                                <div class="feature-icon w-11 h-11 rounded-xl bg-book-500/10 border border-book-500/20 flex items-center justify-center mb-4">
+                                    <span class="text-xl">🖥️</span>
+                                </div>
+                                <h3 class="text-base font-medium mb-2">Dashboard Booking</h3>
+                                <p class="text-sm font-light text-neutral-400 leading-relaxed">
+                                    Menampilkan jadwal lapangan yang tersedia secara real-time. User bisa langsung melihat slot kosong tanpa perlu bertanya ke pengelola.
+                                </p>
+                            </div>
+                            <div class="w-full md:w-64 h-36 rounded-xl overflow-hidden flex-shrink-0 border border-white/5">
+                                <img src="https://awsimages.detik.net.id/community/media/visual/2022/10/18/ilustrasi-badminton-4.jpeg" alt="Dashboard" class="w-full h-full object-cover opacity-60 hover:opacity-80 transition-opacity duration-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="animate-on-scroll feature-card rounded-2xl p-7" style="transition-delay: 200ms;">
+                        <div class="feature-icon w-11 h-11 rounded-xl bg-court-500/10 border border-court-500/20 flex items-center justify-center mb-4">
+                            <span class="text-xl">📅</span>
+                        </div>
+                        <h3 class="text-base font-medium mb-2">Booking Lapangan</h3>
+                        <p class="text-sm font-light text-neutral-400 leading-relaxed">
+                            Pilih tanggal dan jam bermain sesuai kebutuhan. Sistem otomatis mencegah double booking.
+                        </p>
+                    </div>
+
+                    <div class="animate-on-scroll feature-card rounded-2xl p-7" style="transition-delay: 150ms;">
+                        <div class="feature-icon w-11 h-11 rounded-xl bg-book-500/10 border border-book-500/10 flex items-center justify-center mb-4">
+                            <span class="text-xl">📤</span>
+                        </div>
+                        <h3 class="text-base font-medium mb-2">Upload Bukti Pembayaran</h3>
+                        <p class="text-sm font-light text-neutral-400 leading-relaxed">
+                            Unggah bukti transfer pembayaran langsung dari sistem. Tidak perlu kirim via WhatsApp lagi.
+                        </p>
+                    </div>
+
+                    <div class="animate-on-scroll feature-card rounded-2xl p-7" style="transition-delay: 250ms;">
+                        <div class="feature-icon w-11 h-11 rounded-xl bg-court-500/10 border border-court-500/10 flex items-center justify-center mb-4">
+                            <span class="text-xl">✅</span>
+                        </div>
+                        <h3 class="text-base font-medium mb-2">Status Booking</h3>
+                        <p class="text-sm font-light text-neutral-400 leading-relaxed">
+                            Pantau status reservasi secara real-time: menunggu, dikonfirmasi, atau ditolak.
+                        </p>
+                        <div class="flex gap-2 mt-4">
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">Menunggu</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-book-500/10 text-book-400 border border-book-500/20">Disetujui</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded-full bg-red-500/10 text-red-400 border border-red-500/20">Ditolak</span>
+                        </div>
+                    </div>
+
+                    <div class="animate-on-scroll feature-card rounded-2xl p-7 md:col-span-2 lg:col-span-1" style="transition-delay: 300ms;">
+                        <div class="feature-icon w-11 h-11 rounded-xl bg-book-500/10 border border-book-500/10 flex items-center justify-center mb-4">
+                            <span class="text-xl">⚙️</span>
+                        </div>
+                        <h3 class="text-base font-medium mb-2">Manajemen Lapangan</h3>
+                        <p class="text-sm font-light text-neutral-400 leading-relaxed">
+                            Admin dapat mengelola data lapangan dan jadwal dengan mudah melalui panel khusus.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="animate-on-scroll mt-4 feature-card rounded-2xl p-7" style="transition-delay: 350ms;">
+                    <div class="flex flex-col md:flex-row md:items-center gap-5">
+                        <div class="feature-icon w-11 h-11 rounded-xl bg-court-500/10 border border-court-500/10 flex items-center justify-center flex-shrink-0">
+                            <span class="text-xl">📈</span>
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="text-base font-medium mb-1">Laporan Booking</h3>
+                            <p class="text-sm font-light text-neutral-400 leading-relaxed">
+                                Admin dapat melihat laporan pemesanan lapangan secara lengkap untuk keperluan monitoring dan analisis.
+                            </p>
+                        </div>
+                        <div class="hidden md:flex items-center gap-4 text-xs text-neutral-500 flex-shrink-0">
+                            <div class="flex items-center gap-1.5"><span class="text-xs">🎛️</span>Filter</div>
+                            <div class="flex items-center gap-1.5"><span class="text-xs">📥</span>Export</div>
+                            <div class="flex items-center gap-1.5"><span class="text-xs">🖨️</span>Print</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== HOW IT WORKS ===== -->
+        <section id="how-it-works" class="py-24 md:py-32 px-6">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-16">
+                    <div class="animate-on-scroll inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6">
+                        <span class="text-sm">🗺️</span>
+                        <span class="text-xs font-light text-neutral-400 tracking-wide">Alur Pemesanan</span>
+                    </div>
+                    <h2 class="animate-on-scroll text-3xl md:text-5xl font-semibold tracking-tight mb-4" style="transition-delay: 100ms;">
+                        <span class="gradient-text">Cara</span> Kerja
+                    </h2>
+                    <p class="animate-on-scroll text-sm text-neutral-400 font-light max-w-md mx-auto" style="transition-delay: 200ms;">
+                        Dari login hingga booking disetujui — hanya dalam beberapa langkah sederhana.
+                    </p>
+                </div>
+
+                <div class="relative">
+                    <div class="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px connector-line -translate-x-1/2"></div>
+
+                    <!-- Step 1 -->
+                    <div class="animate-on-scroll relative flex flex-col lg:flex-row items-center gap-6 lg:gap-12 mb-12 lg:mb-16" style="transition-delay: 100ms;">
+                        <div class="lg:w-1/2 lg:text-right lg:pr-12">
+                            <div class="step-card rounded-2xl p-6">
+                                <div class="flex items-center gap-3 lg:justify-end mb-3">
+                                    <span class="text-[10px] uppercase tracking-widest text-book-400 font-medium">Langkah 1</span>
+                                    <div class="w-8 h-8 rounded-full bg-book-500/15 border border-book-500/25 flex items-center justify-center text-xs font-semibold text-book-400">1</div>
+                                </div>
+                                <h3 class="text-base font-medium mb-1.5">Login Akun</h3>
+                                <p class="text-xs font-light text-neutral-400 leading-relaxed">Masuk ke sistem menggunakan akun yang sudah terdaftar. Validasi otomatis memastikan keamanan.</p>
+                            </div>
+                        </div>
+                        <div class="hidden lg:flex absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-book-500 shadow-[0_0_15px_rgba(34,197,94,0.5)]"></div>
+                        <div class="lg:w-1/2 lg:pl-12"></div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="animate-on-scroll relative flex flex-col lg:flex-row items-center gap-6 lg:gap-12 mb-12 lg:mb-16" style="transition-delay: 150ms;">
+                        <div class="lg:w-1/2 lg:pr-12"></div>
+                        <div class="hidden lg:flex absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-book-500/70 shadow-[0_0_12px_rgba(34,197,94,0.4)]"></div>
+                        <div class="lg:w-1/2 lg:pl-12">
+                            <div class="step-card rounded-2xl p-6">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-court-500/15 border border-court-500/25 flex items-center justify-center text-xs font-semibold text-court-400">2</div>
+                                    <span class="text-[10px] uppercase tracking-widest text-court-400 font-medium">Langkah 2</span>
+                                </div>
+                                <h3 class="text-base font-medium mb-1.5">Lihat Jadwal Lapangan</h3>
+                                <p class="text-xs font-light text-neutral-400 leading-relaxed">Jelajahi jadwal lapangan yang tersedia. Filter berdasarkan tanggal, lapangan, atau waktu yang diinginkan.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="animate-on-scroll relative flex flex-col lg:flex-row items-center gap-6 lg:gap-12 mb-12 lg:mb-16" style="transition-delay: 200ms;">
+                        <div class="lg:w-1/2 lg:text-right lg:pr-12">
+                            <div class="step-card rounded-2xl p-6">
+                                <div class="flex items-center gap-3 lg:justify-end mb-3">
+                                    <span class="text-[10px] uppercase tracking-widest text-book-400 font-medium">Langkah 3</span>
+                                    <div class="w-8 h-8 rounded-full bg-book-500/15 border border-book-500/25 flex items-center justify-center text-xs font-semibold text-book-400">3</div>
+                                </div>
+                                <h3 class="text-base font-medium mb-1.5">Pilih & Booking Lapangan</h3>
+                                <p class="text-xs font-light text-neutral-400 leading-relaxed">Pilih slot waktu yang sesuai dan konfirmasi pemesanan. Sistem langsung mengunci jadwal yang dipilih.</p>
+                            </div>
+                        </div>
+                        <div class="hidden lg:flex absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-book-500/70 shadow-[0_0_12px_rgba(34,197,94,0.4)]"></div>
+                        <div class="lg:w-1/2 lg:pl-12"></div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="animate-on-scroll relative flex flex-col lg:flex-row items-center gap-6 lg:gap-12 mb-12 lg:mb-16" style="transition-delay: 250ms;">
+                        <div class="lg:w-1/2 lg:pr-12"></div>
+                        <div class="hidden lg:flex absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-book-500/70 shadow-[0_0_12px_rgba(34,197,94,0.4)]"></div>
+                        <div class="lg:w-1/2 lg:pl-12">
+                            <div class="step-card rounded-2xl p-6">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-court-500/15 border border-court-500/25 flex items-center justify-center text-xs font-semibold text-court-400">4</div>
+                                    <span class="text-[10px] uppercase tracking-widest text-court-400 font-medium">Langkah 4</span>
+                                </div>
+                                <h3 class="text-base font-medium mb-1.5">Upload Bukti Pembayaran</h3>
+                                <p class="text-xs font-light text-neutral-400 leading-relaxed">Unggah screenshot bukti transfer. Format gambar didukung (JPG, PNG) dengan ukuran maksimal yang wajar.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="animate-on-scroll relative flex flex-col lg:flex-row items-center gap-6 lg:gap-12 mb-12 lg:mb-16" style="transition-delay: 300ms;">
+                        <div class="lg:w-1/2 lg:text-right lg:pr-12">
+                            <div class="step-card rounded-2xl p-6">
+                                <div class="flex items-center gap-3 lg:justify-end mb-3">
+                                    <span class="text-[10px] uppercase tracking-widest text-book-400 font-medium">Langkah 5</span>
+                                    <div class="w-8 h-8 rounded-full bg-book-500/15 border border-book-500/25 flex items-center justify-center text-xs font-semibold text-book-400">5</div>
+                                </div>
+                                <h3 class="text-base font-medium mb-1.5">Verifikasi Admin</h3>
+                                <p class="text-xs font-light text-neutral-400 leading-relaxed">Admin memeriksa bukti pembayaran dan memvalidasi. Proses verifikasi biasanya cepat dan transparan.</p>
+                            </div>
+                        </div>
+                        <div class="hidden lg:flex absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-book-500/70 shadow-[0_0_12px_rgba(34,197,94,0.4)]"></div>
+                        <div class="lg:w-1/2 lg:pl-12"></div>
+                    </div>
+
+                    <!-- Step 6 -->
+                    <div class="animate-on-scroll relative flex flex-col lg:flex-row items-center gap-6 lg:gap-12" style="transition-delay: 350ms;">
+                        <div class="lg:w-1/2 lg:pr-12"></div>
+                        <div class="hidden lg:flex absolute left-1/2 -translate-x-1/2 w-4 h-4 rounded-full bg-book-500 shadow-[0_0_20px_rgba(34,197,94,0.6)]"></div>
+                        <div class="lg:w-1/2 lg:pl-12">
+                            <div class="step-card rounded-2xl p-6 border-book-500/20 bg-book-500/[0.03]">
+                                <div class="flex items-center gap-3 mb-3">
+                                    <div class="w-8 h-8 rounded-full bg-book-500/20 border border-book-500/30 flex items-center justify-center">
+                                        <span class="text-sm text-book-400">✔</span>
+                                    </div>
+                                    <span class="text-[10px] uppercase tracking-widest text-book-400 font-medium">Selesai</span>
+                                </div>
+                                <h3 class="text-base font-medium mb-1.5">Booking Disetujui!</h3>
+                                <p class="text-xs font-light text-neutral-400 leading-relaxed">Kamu mendapat notifikasi bahwa booking berhasil dikonfirmasi. Lapangan siap digunakan sesuai jadwal.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== ROLES SECTION ===== -->
+        <section id="roles" class="section-bg py-24 md:py-32 px-6">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-16">
+                    <div class="animate-on-scroll inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6">
+                        <span class="text-sm">👥</span>
+                        <span class="text-xs font-light text-neutral-400 tracking-wide">Dua Peran Utama</span>
+                    </div>
+                    <h2 class="animate-on-scroll text-3xl md:text-5xl font-semibold tracking-tight mb-4" style="transition-delay: 100ms;">
+                        Dirancang untuk <span class="gradient-text">Semua Pihak</span>
+                    </h2>
+                    <p class="animate-on-scroll text-sm text-neutral-400 font-light max-w-md mx-auto" style="transition-delay: 200ms;">
+                        CourtBook memiliki dua peran dengan fitur yang berbeda namun terintegrasi sempurna.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- User Role -->
+                    <div class="animate-on-scroll role-card rounded-2xl p-8 relative overflow-hidden" style="transition-delay: 150ms;">
+                        <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-book-500/50 via-book-500/20 to-transparent"></div>
+                        <div class="w-14 h-14 rounded-2xl bg-book-500/10 border border-book-500/20 flex items-center justify-center mb-6">
+                            <span class="text-2xl">👤</span>
+                        </div>
+                        <h3 class="text-xl font-medium mb-2">Untuk Pemain</h3>
+                        <p class="text-sm font-light text-neutral-400 leading-relaxed mb-6">
+                            Pengguna yang ingin membooking lapangan badminton dengan mudah tanpa ribet.
+                        </p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3"><span class="text-base text-book-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Login & kelola akun pribadi</span></li>
+                            <li class="flex items-start gap-3"><span class="text-base text-book-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Lihat jadwal lapangan real-time</span></li>
+                            <li class="flex items-start gap-3"><span class="text-base text-book-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Booking lapangan sesuai waktu</span></li>
+                            <li class="flex items-start gap-3"><span class="text-base text-book-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Upload bukti pembayaran</span></li>
+                            <li class="flex items-start gap-3"><span class="text-base text-book-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Monitor status booking</span></li>
+                        </ul>
+                    </div>
+
+                    <!-- Admin Role -->
+                    <div class="animate-on-scroll role-card rounded-2xl p-8 relative overflow-hidden" style="transition-delay: 250ms;">
+                        <div class="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-court-500/50 via-court-500/20 to-transparent"></div>
+                        <div class="w-14 h-14 rounded-2xl bg-court-500/10 border border-court-500/20 flex items-center justify-center mb-6">
+                            <span class="text-2xl">🛡️</span>
+                        </div>
+                        <h3 class="text-xl font-medium mb-2">Untuk Admin</h3>
+                        <p class="text-sm font-light text-neutral-400 leading-relaxed mb-6">
+                            Pengelola lapangan yang mengatur jadwal, verifikasi pembayaran, dan memantau booking.
+                        </p>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3"><span class="text-base text-court-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Login admin terpisah & aman</span></li>
+                            <li class="flex items-start gap-3"><span class="text-base text-court-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Kelola data lapangan & jadwal</span></li>
+                            <li class="flex items-start gap-3"><span class="text-base text-court-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Konfirmasi atau tolak booking</span></li>
+                            <li class="flex items-start gap-3"><span class="text-base text-court-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Verifikasi bukti pembayaran</span></li>
+                            <li class="flex items-start gap-3"><span class="text-base text-court-400 mt-0.5 flex-shrink-0">✔</span><span class="text-sm font-light text-neutral-300">Lihat laporan booking lengkap</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== GOALS SECTION ===== -->
+        <section class="py-24 md:py-32 px-6 border-y border-white/5">
+            <div class="max-w-5xl mx-auto">
+                <div class="text-center mb-16">
+                    <div class="animate-on-scroll inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6">
+                        <span class="text-sm">🎯</span>
+                        <span class="text-xs font-light text-neutral-400 tracking-wide">Tujuan & Visi</span>
+                    </div>
+                    <h2 class="animate-on-scroll text-3xl md:text-5xl font-semibold tracking-tight mb-4" style="transition-delay: 100ms;">
+                        Kenapa <span class="gradient-text">CourtBook</span>?
+                    </h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="animate-on-scroll feature-card rounded-2xl p-6 text-center" style="transition-delay: 100ms;">
+                        <div class="feature-icon w-12 h-12 rounded-xl bg-book-500/10 border border-book-500/15 flex items-center justify-center mx-auto mb-4"><span class="text-2xl">⚡</span></div>
+                        <h4 class="text-sm font-medium mb-2">Praktis</h4>
+                        <p class="text-xs font-light text-neutral-400 leading-relaxed">Mempermudah proses booking tanpa harus datang langsung ke lokasi lapangan.</p>
+                    </div>
+                    <div class="animate-on-scroll feature-card rounded-2xl p-6 text-center" style="transition-delay: 180ms;">
+                        <div class="feature-icon w-12 h-12 rounded-xl bg-court-500/10 border border-court-500/15 flex items-center justify-center mx-auto mb-4"><span class="text-2xl">🛡️</span></div>
+                        <h4 class="text-sm font-medium mb-2">Anti Bentrok</h4>
+                        <p class="text-xs font-light text-neutral-400 leading-relaxed">Menghindari bentrok jadwal bermain antar pemain dengan sistem penguncian otomatis.</p>
+                    </div>
+                    <div class="animate-on-scroll feature-card rounded-2xl p-6 text-center" style="transition-delay: 260ms;">
+                        <div class="feature-icon w-12 h-12 rounded-xl bg-book-500/10 border border-book-500/15 flex items-center justify-center mx-auto mb-4"><span class="text-2xl">⏱️</span></div>
+                        <h4 class="text-sm font-medium mb-2">Real-time</h4>
+                        <p class="text-xs font-light text-neutral-400 leading-relaxed">Informasi ketersediaan lapangan ditampilkan secara real-time dan selalu terbaru.</p>
+                    </div>
+                    <div class="animate-on-scroll feature-card rounded-2xl p-6 text-center" style="transition-delay: 340ms;">
+                        <div class="feature-icon w-12 h-12 rounded-xl bg-court-500/10 border border-court-500/15 flex items-center justify-center mx-auto mb-4"><span class="text-2xl">📋</span></div>
+                        <h4 class="text-sm font-medium mb-2">Terorganisir</h4>
+                        <p class="text-xs font-light text-neutral-400 leading-relaxed">Membantu admin mengelola data booking secara terstruktur dan mudah didokumentasikan.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== TEAM SECTION ===== -->
+        <section id="team" class="section-bg py-24 md:py-32 px-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-16">
+                    <div class="animate-on-scroll inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6">
+                        <span class="text-sm">🤝</span>
+                        <span class="text-xs font-light text-neutral-400 tracking-wide">Tim Pengembang</span>
+                    </div>
+                    <h2 class="animate-on-scroll text-3xl md:text-5xl font-semibold tracking-tight mb-4" style="transition-delay: 100ms;">
+                        <span class="gradient-text">Tim</span> Kami
+                    </h2>
+                    <p class="animate-on-scroll text-sm text-neutral-400 font-light max-w-md mx-auto" style="transition-delay: 200ms;">
+                        Mahasiswa yang mengembangkan CourtBook sebagai proyek Software Engineering.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div class="animate-on-scroll team-card rounded-2xl p-7 text-center" style="transition-delay: 100ms;">
+                        <div class="team-avatar w-20 h-20 rounded-full bg-gradient-to-br from-book-500/20 to-court-500/20 border border-book-500/20 flex items-center justify-center mx-auto mb-5 transition-all duration-500"><span class="text-xl font-semibold text-book-300">OS</span></div>
+                        <h4 class="text-sm font-medium mb-1">Oktavia Safitri Ramadani</h4>
+                        <p class="text-xs text-neutral-500 mb-4">NIM 2441055</p>
+                        <div class="flex items-center justify-center gap-2"><span class="text-[10px] px-2.5 py-1 rounded-full bg-book-500/10 text-book-400 border border-book-500/15">Developer</span></div>
+                    </div>
+
+                    <div class="animate-on-scroll team-card rounded-2xl p-7 text-center" style="transition-delay: 200ms;">
+                        <div class="team-avatar w-20 h-20 rounded-full bg-gradient-to-br from-court-500/20 to-book-500/20 border border-court-500/20 flex items-center justify-center mx-auto mb-5 transition-all duration-500"><span class="text-xl font-semibold text-court-300">MJ</span></div>
+                        <h4 class="text-sm font-medium mb-1">Melinda Julianti Dewi</h4>
+                        <p class="text-xs text-neutral-500 mb-4">NIM 2441056</p>
+                        <div class="flex items-center justify-center gap-2"><span class="text-[10px] px-2.5 py-1 rounded-full bg-court-500/10 text-court-400 border border-court-500/15">Developer</span></div>
+                    </div>
+
+                    <div class="animate-on-scroll team-card rounded-2xl p-7 text-center" style="transition-delay: 300ms;">
+                        <div class="team-avatar w-20 h-20 rounded-full bg-gradient-to-br from-book-500/20 to-court-500/20 border border-book-500/20 flex items-center justify-center mx-auto mb-5 transition-all duration-500"><span class="text-xl font-semibold text-book-300">FF</span></div>
+                        <h4 class="text-sm font-medium mb-1">Fariz Muhammad Fadilah</h4>
+                        <p class="text-xs text-neutral-500 mb-4">NIM 2441063</p>
+                        <div class="flex items-center justify-center gap-2"><span class="text-[10px] px-2.5 py-1 rounded-full bg-book-500/10 text-book-400 border border-book-500/15">Developer</span></div>
+                    </div>
+                </div>
+
+                <div class="animate-on-scroll mt-10 text-center" style="transition-delay: 400ms;">
+                    <div class="inline-flex items-center gap-3 glass rounded-full px-5 py-2.5">
+                        <span class="text-sm text-neutral-500">🔄</span>
+                        <span class="text-xs text-neutral-400 font-light">Metodologi pengembangan: <span class="text-neutral-300 font-medium">Waterfall Model</span></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== CTA SECTION ===== -->
+        <section class="py-24 md:py-32 px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <div class="animate-on-scroll relative">
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-book-500/[0.06] rounded-full blur-[100px] pointer-events-none"></div>
+                    <div class="relative">
+                        <div class="w-16 h-16 rounded-2xl bg-book-500/10 border border-book-500/20 flex items-center justify-center mx-auto mb-8"><span class="text-3xl">📅</span></div>
+                        <h2 class="text-3xl md:text-5xl font-semibold tracking-tight mb-4">
+                            Siap <span class="gradient-text">Memesan</span> Lapangan?
+                        </h2>
+                        <p class="text-sm text-neutral-400 font-light max-w-md mx-auto mb-10 leading-relaxed">
+                            Jangan buang waktu mengantri. Booking lapangan badminton impianmu sekarang dengan CourtBook.
+                        </p>
+                        <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+                            <button onclick="window.location.href='Login Courtbook.html'" class="btn-primary text-black text-sm font-medium px-8 py-3.5 rounded-full flex items-center gap-2">
+                                Daftar Sekarang
+                                <span class="text-base">➔</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ===== FOOTER ===== -->
+    <footer class="relative z-10 border-t border-white/5 py-12 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
+                <div class="md:col-span-2">
+                    <div class="flex items-center gap-2.5 mb-4">
+                        <img src="https://z-cdn-media.chatglm.cn/files/73e3e7f9-1a5d-42ab-9c8d-356a7f6d174e.png?auth_key=1876485946-3cd1841e060a489d8115899a606120f4-0-e846344c935a50cd69753a3886bad3b7" alt="CourtBook" class="h-8 w-8 rounded-full object-contain bg-white/10 p-0.5">
+                        <span class="text-sm font-semibold tracking-tight"><span class="text-court-400">Court</span><span class="text-book-400">Book</span></span>
+                    </div>
+                    <p class="text-xs font-light text-neutral-500 leading-relaxed max-w-sm mb-4">
+                        Sistem booking lapangan badminton berbasis web yang dirancang untuk mempermudah proses pemesanan secara digital — praktis, efisien, dan terorganisir.
+                    </p>
+                    <p class="text-[10px] text-neutral-600 font-light">Software Engineering Project — Kelompok CourtBook</p>
+                </div>
+                <div>
+                    <h5 class="text-xs font-medium text-neutral-300 mb-4 uppercase tracking-widest">Navigasi</h5>
+                    <ul class="space-y-2.5">
+                        <li><a href="#features" class="text-xs text-neutral-500 hover:text-white transition-colors duration-300">Fitur</a></li>
+                        <li><a href="#how-it-works" class="text-xs text-neutral-500 hover:text-white transition-colors duration-300">Cara Kerja</a></li>
+                        <li><a href="#roles" class="text-xs text-neutral-500 hover:text-white transition-colors duration-300">Peran</a></li>
+                        <li><a href="#team" class="text-xs text-neutral-500 hover:text-white transition-colors duration-300">Tim</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-xs font-medium text-neutral-300 mb-4 uppercase tracking-widest">Teknologi</h5>
+                    <ul class="space-y-2.5">
+                        <li class="text-xs text-neutral-500">Web-based System</li>
+                        <li class="text-xs text-neutral-500">Waterfall Model</li>
+                        <li class="text-xs text-neutral-500">UML Documentation</li>
+                        <li class="text-xs text-neutral-500">Responsive Design</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-white/5 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-[11px] text-neutral-600 font-light">© 2025 CourtBook. Proyek Akademik — Software Engineering.</p>
+                <div class="flex items-center gap-1.5"><span class="text-[10px] text-neutral-600">Dibuat dengan</span><span class="text-xs">❤️</span><span class="text-[10px] text-neutral-600">oleh Tim CourtBook</span></div>
+            </div>
+        </div>
+    </footer>
+
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
+
+    <script>
+        // Theme Logic
+        function applyTheme(theme) {
+            const iconDesktop = document.getElementById('theme-icon-desktop');
+            const iconMobile = document.getElementById('theme-icon-mobile-nav');
+            if (theme === 'light') {
+                document.body.classList.add('light-theme');
+                if (iconDesktop) iconDesktop.textContent = '🌙';
+                if (iconMobile) iconMobile.textContent = '🌙';
+                localStorage.setItem('courtbook-theme', 'light');
+            } else {
+                document.body.classList.remove('light-theme');
+                if (iconDesktop) iconDesktop.textContent = '☀️';
+                if (iconMobile) iconMobile.textContent = '☀️';
+                localStorage.setItem('courtbook-theme', 'dark');
+            }
+        }
+        function toggleTheme() { applyTheme(document.body.classList.contains('light-theme') ? 'dark' : 'light'); }
+        applyTheme(localStorage.getItem('courtbook-theme') || 'dark');
+
+        // 3D Particle Background
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let mouseX = 0, mouseY = 0, particles = [];
+        function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        resizeCanvas(); window.addEventListener('resize', resizeCanvas);
+        document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+
+        class Particle {
+            constructor() { this.reset(); }
+            reset() {
+                this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height;
+                this.z = Math.random() * 1000; this.vx = (Math.random() - 0.5) * 0.25;
+                this.vy = (Math.random() - 0.5) * 0.25; this.vz = -(Math.random() * 1.5 + 0.5);
+                this.isGreen = Math.random() > 0.35;
+            }
+            update() {
+                this.x += this.vx + (mouseX - canvas.width / 2) * 0.00008;
+                this.y += this.vy + (mouseY - canvas.height / 2) * 0.00008; this.z += this.vz;
+                if (this.z < 1) this.reset();
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw(isLight) {
+                const scale = 400 / this.z, sx = (this.x - canvas.width / 2) * scale + canvas.width / 2, sy = (this.y - canvas.height / 2) * scale + canvas.height / 2;
+                const alpha = Math.min(1, (1000 - this.z) / 500), size = scale * 1.5, g = this.isGreen;
+                const r = g ? 34 : 59, gg = g ? 197 : 130, b = g ? 94 : 246;
+                const grad = ctx.createRadialGradient(sx, sy, 0, sx, sy, size);
+                const alphaMultiplier = isLight ? 0.8 : 0.7;
+                grad.addColorStop(0, `rgba(${r},${gg},${b},${alpha * alphaMultiplier})`);
+                grad.addColorStop(0.4, `rgba(${r},${gg},${b},${alpha * (isLight ? 0.3 : 0.2)})`);
+                grad.addColorStop(1, 'transparent');
+                ctx.beginPath(); ctx.arc(sx, sy, size, 0, Math.PI * 2); ctx.fillStyle = grad; ctx.fill();
+            }
+        }
+        for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+        function animateParticles() {
+            const isLight = document.body.classList.contains('light-theme');
+            ctx.fillStyle = isLight ? 'rgba(248, 250, 252, 0.3)' : 'rgba(5,5,5,0.12)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(isLight); });
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p1 = particles[i], p2 = particles[j], s1 = 400 / p1.z, s2 = 400 / p2.z;
+                    const x1 = (p1.x - canvas.width/2)*s1 + canvas.width/2, y1 = (p1.y - canvas.height/2)*s1 + canvas.height/2;
+                    const x2 = (p2.x - canvas.width/2)*s2 + canvas.width/2, y2 = (p2.y - canvas.height/2)*s2 + canvas.height/2;
+                    const dist = Math.hypot(x1-x2, y1-y2);
+                    if (dist < 80) {
+                        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+                        const alphaDist = (1 - dist/80), alphaVal = alphaDist * (isLight ? 0.15 : 0.08); 
+                        ctx.strokeStyle = `rgba(34,197,94,${alphaVal})`; ctx.lineWidth = 0.5; ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animateParticles);
+        }
+        animateParticles();
+
+        // Others
+        const navbar = document.getElementById('navbar');
+        window.addEventListener('scroll', () => { navbar.classList.toggle('nav-scrolled', window.scrollY > 80); });
+
+        let mobileMenuOpen = false;
+        function toggleMobileMenu() {
+            mobileMenuOpen = !mobileMenuOpen;
+            document.getElementById('mobile-menu').classList.toggle('mobile-menu-open', mobileMenuOpen);
+            document.getElementById('menu-btn').innerHTML = mobileMenuOpen ? '<span class="text-xl">✕</span>' : '<span class="text-xl">☰</span>';
+            document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+        }
+
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => { if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); } });
+        }, { threshold: 0.15, rootMargin: '0px 0px -50px 0px' });
+        document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+
+        function showToast(message) {
+            const container = document.getElementById('toast-container'), toast = document.createElement('div');
+            toast.className = 'toast pointer-events-auto glass-strong rounded-xl px-5 py-3 flex items-center gap-3 max-w-sm';
+            toast.innerHTML = `<div class="w-7 h-7 rounded-lg bg-book-500/15 border border-book-500/20 flex items-center justify-center flex-shrink-0"><span class="text-sm">ℹ️</span></div><p class="text-xs text-neutral-300 font-light">${message}</p>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.classList.add('toast-out'); setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+
+        document.querySelectorAll('.mock-slot.available').forEach(slot => {
+            slot.addEventListener('click', function() {
+                document.querySelectorAll('.mock-slot').forEach(s => {
+                    s.classList.remove('border-book-500/30', 'bg-book-500/5');
+                    s.querySelector('.text-book-400, .text-neutral-500').classList.remove('text-book-400');
+                    s.querySelector('.text-book-400, .text-neutral-500').classList.add('text-neutral-500');
+                    s.querySelector('.text-book-300, .text-neutral-300').classList.remove('text-book-300');
+                    s.querySelector('.text-neutral-300, .text-book-300').classList.add('text-neutral-300');
+                });
+                this.classList.add('border-book-500/30', 'bg-book-500/5');
+                this.querySelector('.text-neutral-500').classList.add('text-book-400');
+                this.querySelector('.text-neutral-500').classList.remove('text-neutral-500');
+                this.querySelector('.text-neutral-300').classList.add('text-book-300');
+                this.querySelector('.text-neutral-300').classList.remove('text-neutral-300');
+                showToast(`Slot ${this.querySelector('.text-book-300').textContent} dipilih!`);
+            });
+        });
+    </script>
+</body>
+</html>
